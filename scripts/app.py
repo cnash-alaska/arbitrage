@@ -3,6 +3,7 @@ import streamlit as st
 import pandas as pd
 import os
 
+st.set_option("server.fileWatcherType", "none")
 
 def run_scripts():
     scripts = [
