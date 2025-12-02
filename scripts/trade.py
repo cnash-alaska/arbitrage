@@ -1,11 +1,3 @@
-scripts = ["scripts/fetch_markets.py","scripts/markets/bitcoin.py", 'scripts/analysis.py']
-#add in any additional markets above
-for script in scripts:
-    print(f"Running {script}...")
-    with open(script) as f:
-        code = f.read()
-        exec(code)
-
 
 import requests
 import datetime
