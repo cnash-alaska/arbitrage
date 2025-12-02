@@ -3,6 +3,25 @@ import streamlit as st
 import pandas as pd
 import os
 
+
+def run_scripts():
+    scripts = [
+        "scripts/fetch_markets.py",
+        "scripts/markets/bitcoin.py",
+        "scripts/analysis.py"
+        # Add more market scripts above as needed
+    ]
+
+    for script in scripts:
+        st.write(f"Running {script}...")
+        try:
+            with open(script, "r") as f:
+                code = f.read()
+                exec(code, {})
+            st.success(f"Finished {script}")
+        except Exception as e:
+            st.error(f"Error in {script}: {e}")
+
 # -----------------------
 # App configuration
 # -----------------------
@@ -63,6 +82,17 @@ validity_df = load_validity_checks()
 def trade_page():
     st.title("Trade Execution")
 
+        # -------------------------
+    # Refresh & Run Scripts
+    # -------------------------
+    st.subheader("Refresh Market Data")
+    if st.button("Run Market Scripts"):
+        st.info("Running full market update... please wait.")
+        run_scripts()
+        st.success("All scripts completed.")
+        st.stop()
+
+    
     st.subheader("Validate Trades")
 
     # Load trades fresh each rerun (not cached)
