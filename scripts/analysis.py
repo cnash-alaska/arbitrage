@@ -1,9 +1,8 @@
 import pandas as pd
 
 markets = ['bitcoin']
-
 def arbitrage_analysis(poly_yes, poly_volume, kalshi_yes, kalshi_volume, max_skew=0.75):
-    epsilon = 1e-9  # small number to avoid division by zero
+    epsilon = 1e-12  # avoid div-by-zero
 
     # Determine lower/higher yes probability
     if poly_yes > kalshi_yes:
@@ -18,29 +17,30 @@ def arbitrage_analysis(poly_yes, poly_volume, kalshi_yes, kalshi_volume, max_ske
         P_Lvol, P_Hvol = poly_volume, kalshi_volume
 
     # Safeguard probabilities
-    P_H = max(P_H, epsilon)
-    P_L = max(P_L, 0.0)
-    P_H = min(P_H, 1 - epsilon)
-    P_L = min(P_L, 1 - epsilon)
+    P_L = min(max(P_L, epsilon), 1 - epsilon)
+    P_H = min(max(P_H, epsilon), 1 - epsilon)
 
     # Arbitrage bounds
     lower_multiple = P_L / P_H
     upper_multiple = (1 - P_L) / (1 - P_H)
 
-    # Volume fraction, safeguard zero total volume
-    total_vol = P_Lvol + P_Hvol
-    if total_vol == 0:
-        vol_fraction = 0.5  # neutral
-    else:
-        vol_fraction = P_Lvol / total_vol
+    # If no arbitrage exists (degenerate case)
+    if lower_multiple >= upper_multiple:
+        multiplier = None
+        return buy_yes, buy_no, lower_multiple, upper_multiple, multiplier
 
-    # Skew
-    skew = max_skew * (vol_fraction - 0.5) * 2  # capped
-    mid = (lower_multiple + upper_multiple) / 2
-    half_range = (upper_multiple - lower_multiple) / 2
-    multiplier = mid + skew * half_range
+    # -------- Guaranteed-profit multiplier (M_star) --------
+    # This multiplier equalizes profits for both outcomes (max-min arbitrage).
+    M_star = (P_H - P_L) / (1 - P_L - (P_H - P_L))
+
+    # Clamp inside arbitrage interval for safety
+    M_star = max(min(M_star, upper_multiple), lower_multiple)
+
+    # Use M_star as your multiplier
+    multiplier = M_star
 
     return buy_yes, buy_no, lower_multiple, upper_multiple, multiplier
+
 
 
 results = []
